@@ -1,0 +1,22 @@
+[
+  {
+    "x": 0,
+    "y": 0,
+    "width": 50,
+    "height": 50,
+    "imageUrl": "https://genlayer.com/favicon.ico",
+    "linkUrl": "https://genlayer.com",
+    "owner": "0x1234...5678",
+    "jobId": "demo-1"
+  },
+  {
+    "x": 100,
+    "y": 200,
+    "width": 100,
+    "height": 50,
+    "imageUrl": "https://ethereum.org/favicon.ico",
+    "linkUrl": "https://ethereum.org",
+    "owner": "0xabcd...efgh",
+    "jobId": "demo-2"
+  }
+]

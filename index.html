@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Million Pixel Page — Powered by EIP-8183 & GenLayer</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --grid-color: #1a1a1e;
+            --text-color: #e0e0e0;
+            --accent-color: #00ffcc;
+            --hover-color: rgba(0, 255, 204, 0.2);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem;
+            width: 100%;
+            background: linear-gradient(to bottom, #111, transparent);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+            background: linear-gradient(45deg, #fff, var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            margin-top: 0.5rem;
+            opacity: 0.7;
+            font-weight: 300;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stats span b {
+            color: var(--accent-color);
+        }
+
+        #canvas-container {
+            position: relative;
+            width: 1000px;
+            height: 1000px;
+            background-color: #000;
+            border: 1px solid #333;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 10px 10px;
+        }
+
+        .pixel-block {
+            position: absolute;
+            box-sizing: border-box;
+            transition: transform 0.1s;
+            z-index: 2;
+        }
+
+        .pixel-block:hover {
+            outline: 2px solid var(--accent-color);
+            transform: scale(1.02);
+            z-index: 10;
+        }
+
+        #tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--accent-color);
+            padding: 10px;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        footer {
+            margin-top: 2rem;
+            padding: 2rem;
+            opacity: 0.5;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>The Million Pixel Page</h1>
+    <div class="subtitle">Powered by EIP-8183 Agentic Commerce & GenLayer Intelligent Contracts</div>
+    <div class="stats">
+        <span>Sold: <b id="stat-sold">0</b></span>
+        <span>Available: <b id="stat-available">1,000,000</b></span>
+        <span>Revenue: <b id="stat-revenue">0</b> ETH</span>
+    </div>
+</header>
+
+<div id="canvas-container"></div>
+
+<div id="tooltip"></div>
+
+<footer>
+    &copy; 2026 Million Pixel EAP — Built for the Agentic Web
+</footer>
+
+<script>
+    const container = document.getElementById('canvas-container');
+    const tooltip = document.getElementById('tooltip');
+    const statSold = document.getElementById('stat-sold');
+    const statAvailable = document.getElementById('stat-available');
+
+    async function loadPixels() {
+        try {
+            const response = await fetch('pixels.json');
+            const pixels = await response.json();
+            
+            let totalPixelsSold = 0;
+
+            pixels.forEach(p => {
+                const block = document.createElement('a');
+                block.href = p.linkUrl;
+                block.target = '_blank';
+                block.className = 'pixel-block';
+                block.style.left = p.x + 'px';
+                block.style.top = p.y + 'px';
+                block.style.width = p.width + 'px';
+                block.style.height = p.height + 'px';
+                block.style.backgroundImage = `url(${p.imageUrl})`;
+                block.style.backgroundSize = 'cover';
+                
+                totalPixelsSold += (p.width * p.height);
+
+                block.onmouseover = (e) => {
+                    tooltip.style.display = 'block';
+                    tooltip.innerHTML = `
+                        <strong>Owner:</strong> ${p.owner}<br>
+                        <strong>Job ID:</strong> ${p.jobId}<br>
+                        <strong>Size:</strong> ${p.width}x${p.height}px
+                    `;
+                };
+
+                block.onmousemove = (e) => {
+                    tooltip.style.left = (e.clientX + 15) + 'px';
+                    tooltip.style.top = (e.clientY + 15) + 'px';
+                };
+
+                block.onmouseout = () => {
+                    tooltip.style.display = 'none';
+                };
+
+                container.appendChild(block);
+            });
+
+            statSold.innerText = totalPixelsSold.toLocaleString();
+            statAvailable.innerText = (1000000 - totalPixelsSold).toLocaleString();
+
+        } catch (err) {
+            console.error("Failed to load pixels.json", err);
+        }
+    }
+
+    loadPixels();
+</script>
+
+</body>
+</html>
