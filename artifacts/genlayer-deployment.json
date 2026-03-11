@@ -1,0 +1,12 @@
+{
+  "network": "genlayer-studionet",
+  "contract": "PixelVerifier",
+  "address": "0x8A3Cf7bd8CB11e219BF13c256634725A117A9E2F",
+  "account": "0xB3Cfc66F003E6C82ebf22D30692b36811e279072",
+  "privateKey": "0xf5969d09a6c393efd52f015aa17b1698dde11d6f3c176a2dfb900160bb0ecbc2",
+  "websiteUrl": "https://acastellana.github.io/million-pixel-eap",
+  "bridgeSender": "0xC94bE65Baf99590B1523db557D157fabaD2DA729",
+  "targetChainEid": 40245,
+  "deployedAt": "2026-03-11T16:52:19.711Z",
+  "txHash": "0x75fc81897fcd4efbb13007306a559bad30ac9b3626ad83fd3168d9efe78acabe"
+}

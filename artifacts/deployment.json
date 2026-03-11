@@ -1,0 +1,32 @@
+{
+  "project": "Million Pixel EAP",
+  "deployments": {
+    "genlayer": {
+      "network": "genlayer-studionet",
+      "contract": "PixelVerifier",
+      "address": "0x8A3Cf7bd8CB11e219BF13c256634725A117A9E2F",
+      "account": "0xB3Cfc66F003E6C82ebf22D30692b36811e279072",
+      "privateKey": "0xf5969d09a6c393efd52f015aa17b1698dde11d6f3c176a2dfb900160bb0ecbc2",
+      "websiteUrl": "https://acastellana.github.io/million-pixel-eap",
+      "bridgeSender": "0xC94bE65Baf99590B1523db557D157fabaD2DA729",
+      "targetChainEid": 40245,
+      "deployedAt": "2026-03-11T16:52:19.711Z",
+      "txHash": "0x75fc81897fcd4efbb13007306a559bad30ac9b3626ad83fd3168d9efe78acabe"
+    },
+    "base_sepolia": {
+      "network": "base-sepolia",
+      "contract": "AgenticCommerce",
+      "address": "0xe825858103c1b36871bc7b013fe5116f5599d15e",
+      "deployer": "0xe9630ba0e3cc2d3BFC58fbE1Bbde478f06E4CE87",
+      "bridge_receiver": "0xc3e6aE892A704c875bF74Df46eD873308db15d82",
+      "oracle_relayer": "0x7b9797c4c2DA625b120A27AD2c07bECB7A0E30fa",
+      "deployedAt": "2026-03-10T16:39:08.672Z",
+      "txHash": "0x715a9eedd90194fce0553b57050bd11ec3fdcd617f1bf0939c278b2e6183af55",
+      "explorer": "https://sepolia.basescan.org/address/0xe825858103c1b36871bc7b013fe5116f5599d15e"
+    }
+  },
+  "github": {
+    "repo": "https://github.com/acastellana/million-pixel-eap",
+    "pages": "https://acastellana.github.io/million-pixel-eap/"
+  }
+}
