@@ -13,6 +13,8 @@
             --hover-color: rgba(0, 255, 204, 0.2);
         }
 
+        * { box-sizing: border-box; }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -24,11 +26,13 @@
             min-height: 100vh;
         }
 
+        /* ── Header ────────────────────────────────────────────────────────── */
         header {
             text-align: center;
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             width: 100%;
             background: linear-gradient(to bottom, #111, transparent);
+            position: relative;
         }
 
         h1 {
@@ -49,171 +53,279 @@
         .stats {
             display: flex;
             gap: 2rem;
-            margin: 1rem 0;
+            margin: 1rem 0 0;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 1px;
+            justify-content: center;
         }
 
-        .stats span b {
+        .stats span b { color: var(--accent-color); }
+
+        .mission {
+            max-width: 700px;
+            margin: 1rem auto 0;
+            padding: 0.8rem 1.2rem;
+            border: 1px solid rgba(0,255,204,0.25);
+            border-radius: 6px;
+            background: rgba(0,255,204,0.05);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #ccc;
+        }
+
+        /* Wallet connect button — top-right of header */
+        #btn-connect-header {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.45rem 1rem;
+            background: rgba(0, 255, 204, 0.08);
+            border: 1px solid rgba(0, 255, 204, 0.5);
+            border-radius: 20px;
             color: var(--accent-color);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+        #btn-connect-header:hover { background: rgba(0, 255, 204, 0.18); }
+        #btn-connect-header.connected {
+            background: rgba(0, 255, 204, 0.05);
+            border-color: rgba(0, 255, 204, 0.3);
         }
 
+        /* ── Canvas ─────────────────────────────────────────────────────────── */
         #canvas-container {
             position: relative;
             width: 1000px;
             height: 1000px;
             background-color: #000;
-            border: 1px solid #333;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            border: 1px solid #2a2a2e;
+            box-shadow: 0 0 60px rgba(0,0,0,0.6);
             cursor: crosshair;
             overflow: hidden;
             background-image:
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 10px 10px;
+            margin-bottom: 2rem;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .pixel-block {
             position: absolute;
             box-sizing: border-box;
-            transition: transform 0.1s;
             z-index: 2;
         }
 
-        .pixel-block:hover {
-            outline: 2px solid var(--accent-color);
-            transform: scale(1.02);
-            z-index: 10;
+        /* Hover block highlight */
+        #hover-highlight {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--hover-color);
+            box-shadow: 0 0 8px var(--accent-color);
+            pointer-events: none;
+            z-index: 5;
+            display: none;
+            border-radius: 1px;
         }
 
+        /* Rubber-band selection rectangle */
+        #selection-rect {
+            position: absolute;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 14px rgba(0, 255, 204, 0.35), inset 0 0 30px rgba(0, 255, 204, 0.04);
+            pointer-events: none;
+            z-index: 6;
+            display: none;
+        }
+
+        /* ── Tooltip ────────────────────────────────────────────────────────── */
         #tooltip {
             position: fixed;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.92);
             border: 1px solid var(--accent-color);
-            padding: 10px;
+            padding: 10px 12px;
             pointer-events: none;
             display: none;
-            z-index: 100;
+            z-index: 300;
             font-size: 0.8rem;
-            border-radius: 4px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            line-height: 1.6;
         }
 
-        /* ── Buy Pixels Panel ─────────────────────────────────────────────── */
-        #buy-panel {
-            width: 100%;
-            max-width: 700px;
-            margin: 2.5rem 0;
-            border: 1px solid rgba(0,255,204,0.3);
-            border-radius: 10px;
-            background: rgba(0,255,204,0.04);
-            padding: 1.5rem 2rem;
-            box-sizing: border-box;
+        /* ── Floating buy panel ─────────────────────────────────────────────── */
+        #floating-panel {
+            position: fixed;
+            z-index: 150;
+            width: 340px;
+            background: rgba(10, 10, 14, 0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 14px;
+            padding: 1.2rem 1.4rem 1.1rem;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,255,204,0.08);
+            display: none;
         }
 
-        #buy-panel h2 {
-            margin: 0 0 1rem;
+        #floating-panel.visible {
+            display: block;
+            animation: panel-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes panel-in {
+            from { opacity: 0; transform: translateY(8px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)   scale(1); }
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.85rem;
+        }
+
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            letter-spacing: 0.2px;
+        }
+
+        .panel-subtitle {
+            font-size: 0.72rem;
+            color: #666;
+            margin-top: 0.2rem;
+        }
+
+        .panel-close {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            margin-top: 2px;
+            transition: color 0.15s;
+        }
+        .panel-close:hover { color: #bbb; }
+
+        .panel-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.9rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .panel-price {
             font-size: 1.3rem;
+            font-weight: 800;
             color: var(--accent-color);
         }
 
-        .buy-contract-info {
-            font-size: 0.78rem;
-            opacity: 0.6;
-            margin-bottom: 1.2rem;
-            word-break: break-all;
+        .panel-price-label {
+            font-size: 0.75rem;
+            color: #555;
         }
 
-        .buy-contract-info a { color: var(--accent-color); text-decoration: none; }
-        .buy-contract-info a:hover { text-decoration: underline; }
-
-        .buy-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.7rem;
-        }
-
-        .buy-grid label {
+        .panel-inputs {
             display: flex;
             flex-direction: column;
-            font-size: 0.8rem;
-            opacity: 0.8;
-            gap: 0.3rem;
+            gap: 0.5rem;
+            margin-bottom: 0.85rem;
         }
 
-        .buy-grid input {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 5px;
-            color: #fff;
-            padding: 0.5rem 0.7rem;
-            font-size: 0.9rem;
+        #floating-panel input[type="url"],
+        #floating-panel input[type="text"] {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ddd;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.83rem;
             width: 100%;
-            box-sizing: border-box;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        #floating-panel input::placeholder { color: #444; }
+        #floating-panel input:focus {
+            outline: none;
+            border-color: rgba(0, 255, 204, 0.45);
+            background: rgba(0, 255, 204, 0.03);
         }
 
-        .buy-grid input:focus {
-            outline: 1px solid var(--accent-color);
-            border-color: var(--accent-color);
+        .panel-wallet {
+            font-size: 0.73rem;
+            color: #666;
+            margin-bottom: 0.7rem;
+        }
+        .panel-wallet .addr {
+            color: var(--accent-color);
+            opacity: 0.85;
         }
 
-        .buy-grid .full-row { grid-column: 1 / -1; }
-
-        .buy-actions {
-            display: flex;
-            gap: 0.8rem;
-            margin-top: 1.2rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 0.6rem 1.3rem;
+        .btn-buy-panel {
+            width: 100%;
+            padding: 0.65rem;
+            background: var(--accent-color);
             border: none;
-            border-radius: 6px;
+            border-radius: 9px;
+            color: #0a0a0c;
+            font-size: 0.9rem;
+            font-weight: 700;
             cursor: pointer;
+            letter-spacing: 0.3px;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn-buy-panel:hover:not(:disabled) { opacity: 0.88; }
+        .btn-buy-panel:active:not(:disabled) { transform: scale(0.98); }
+        .btn-buy-panel:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .btn-connect-panel {
+            width: 100%;
+            padding: 0.65rem;
+            background: rgba(0, 255, 204, 0.07);
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            border-radius: 9px;
+            color: var(--accent-color);
             font-size: 0.9rem;
             font-weight: 600;
-            transition: opacity 0.15s;
+            cursor: pointer;
+            transition: background 0.15s;
         }
-        .btn:hover { opacity: 0.85; }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-connect-panel:hover { background: rgba(0, 255, 204, 0.14); }
 
-        .btn-connect {
-            background: rgba(0,255,204,0.15);
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .btn-buy {
-            background: var(--accent-color);
-            color: #0a0a0c;
-        }
-
-        #buy-status {
-            font-size: 0.82rem;
-            margin-top: 0.8rem;
-            min-height: 1.2em;
+        #panel-status {
+            font-size: 0.76rem;
+            margin-top: 0.65rem;
+            min-height: 1em;
             line-height: 1.5;
+            color: transparent;
+            transition: color 0.2s;
+            word-break: break-word;
         }
+        #panel-status:not(:empty) { color: #888; }
+        #panel-status.ok   { color: var(--accent-color) !important; }
+        #panel-status.err  { color: #ff6464 !important; }
+        #panel-status.info { color: #999 !important; }
 
-        #buy-status.ok    { color: var(--accent-color); }
-        #buy-status.err   { color: #ff6666; }
-        #buy-status.info  { color: #aaa; }
-
-        .wallet-addr {
-            font-size: 0.78rem;
-            color: var(--accent-color);
-            opacity: 0.8;
-            margin-left: auto;
-        }
-
+        /* ── Footer ─────────────────────────────────────────────────────────── */
         footer {
-            margin-top: 2rem;
+            margin-top: auto;
             padding: 2rem;
-            opacity: 0.5;
+            opacity: 0.45;
             font-size: 0.8rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -227,58 +339,50 @@
         <span>Available: <b id="stat-available">1,000,000</b></span>
         <span>Revenue: <b id="stat-revenue">0</b> ETH</span>
     </div>
-    <div class="mission" style="max-width:700px;margin:1rem auto 0;padding:0.8rem 1.2rem;border:1px solid rgba(0,255,204,0.25);border-radius:6px;background:rgba(0,255,204,0.05);font-size:0.85rem;line-height:1.5;color:#ccc;">
+    <div class="mission">
         💡 <strong style="color:var(--accent-color);">100% of proceeds fund EIP-8183 development.</strong>
         Every pixel purchased through the Agentic Commerce escrow directly supports the creation,
         tooling, and adoption of <a href="https://github.com/ethereum/ERCs/blob/master/ERCS/erc-8183.md" target="_blank" style="color:var(--accent-color);text-decoration:underline;">EIP-8183 (Agentic Commerce Protocol)</a> —
         the open standard for AI agent job escrows on Ethereum.
     </div>
+    <button id="btn-connect-header" onclick="connectWallet()">Connect Wallet</button>
 </header>
 
-<div id="canvas-container"></div>
+<div id="canvas-container">
+    <div id="hover-highlight"></div>
+    <div id="selection-rect"></div>
+</div>
 
 <div id="tooltip"></div>
 
-<!-- ── Buy Pixels Panel ──────────────────────────────────────────────────── -->
-<div id="buy-panel">
-    <h2>🖼 Buy Pixels</h2>
-
-    <div class="buy-contract-info">
-        Contract (Base Sepolia):
-        <a id="contract-link" href="#" target="_blank" rel="noopener">loading…</a>
+<!-- ── Floating buy panel ─────────────────────────────────────────────────── -->
+<div id="floating-panel">
+    <div class="panel-header">
+        <div>
+            <div class="panel-title" id="panel-selection-label">Select pixels on the canvas</div>
+            <div class="panel-subtitle">Drag to paint a rectangular region</div>
+        </div>
+        <button class="panel-close" onclick="clearSelection()" title="Close">✕</button>
     </div>
 
-    <div class="buy-grid">
-        <label>X Position (0–999)
-            <input type="number" id="px-x" value="200" min="0" max="999">
-        </label>
-        <label>Y Position (0–999)
-            <input type="number" id="px-y" value="200" min="0" max="999">
-        </label>
-        <label>Width (px)
-            <input type="number" id="px-w" value="50" min="1" max="1000">
-        </label>
-        <label>Height (px)
-            <input type="number" id="px-h" value="50" min="1" max="1000">
-        </label>
-        <label class="full-row">Image URL
-            <input type="url" id="px-img" placeholder="https://example.com/logo.png">
-        </label>
-        <label class="full-row">Link URL
-            <input type="url" id="px-link" placeholder="https://yoursite.com">
-        </label>
-        <label class="full-row">Budget (ETH — goes to EIP-8183 fund)
-            <input type="number" id="px-budget" value="0.001" min="0.0001" step="0.0001">
-        </label>
+    <div class="panel-price-row">
+        <div class="panel-price" id="panel-price">—</div>
+        <div class="panel-price-label" id="panel-price-label">ETH</div>
     </div>
 
-    <div class="buy-actions">
-        <button class="btn btn-connect" id="btn-connect" onclick="connectWallet()">Connect Wallet</button>
-        <button class="btn btn-buy" id="btn-buy" onclick="buyPixels()" disabled>Buy Pixels</button>
-        <span class="wallet-addr" id="wallet-addr"></span>
+    <div class="panel-inputs">
+        <input type="url" id="fp-img"  placeholder="Image URL  (https://…)" autocomplete="off">
+        <input type="url" id="fp-link" placeholder="Link URL   (https://…)" autocomplete="off">
     </div>
 
-    <div id="buy-status" class="info">Connect your MetaMask wallet to get started.</div>
+    <div class="panel-wallet" id="panel-wallet-info">
+        Wallet: <span id="panel-wallet-text">not connected</span>
+    </div>
+
+    <button class="btn-buy-panel"     id="fp-btn-buy"     onclick="buyPixels()"     style="display:none">Buy Pixels</button>
+    <button class="btn-connect-panel" id="fp-btn-connect" onclick="connectWallet()">Connect Wallet</button>
+
+    <div id="panel-status"></div>
 </div>
 
 <footer>
@@ -288,103 +392,40 @@
 </footer>
 
 <script>
-// ── Contract config ────────────────────────────────────────────────────────
-const CONTRACT_ADDRESS = '0xe825858103c1b36871bc7b013fe5116f5599d15e';
+// ── Contract config ─────────────────────────────────────────────────────────
+const CONTRACT_ADDRESS    = '0xe825858103c1b36871bc7b013fe5116f5599d15e';
 const BASE_SEPOLIA_CHAIN_ID = '0x14a34'; // 84532
-const BASE_SEPOLIA_RPC = 'https://sepolia.base.org';
-const EXPLORER_URL = 'https://sepolia.basescan.org/address/' + CONTRACT_ADDRESS;
+const BASE_SEPOLIA_RPC    = 'https://sepolia.base.org';
+const EXPLORER_URL        = 'https://sepolia.basescan.org/address/' + CONTRACT_ADDRESS;
 
-// Minimal ABI for pixel purchase flow
-const AC_ABI = [
-  {
-    name: 'createPixelJob',
-    type: 'function',
-    inputs: [
-      { name: 'expiredAt', type: 'uint256' },
-      { name: 'pixelX', type: 'uint256' },
-      { name: 'pixelY', type: 'uint256' },
-      { name: 'blockWidth', type: 'uint256' },
-      { name: 'blockHeight', type: 'uint256' },
-      { name: 'imageUrl', type: 'string' },
-      { name: 'linkUrl', type: 'string' },
-      { name: 'hook', type: 'address' },
-    ],
-    outputs: [{ name: 'jobId', type: 'bytes32' }],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'setProvider',
-    type: 'function',
-    inputs: [
-      { name: 'jobId', type: 'bytes32' },
-      { name: 'provider', type: 'address' },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'setBudget',
-    type: 'function',
-    inputs: [
-      { name: 'jobId', type: 'bytes32' },
-      { name: 'budget', type: 'uint256' },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    name: 'fund',
-    type: 'function',
-    inputs: [
-      { name: 'jobId', type: 'bytes32' },
-      { name: 'expectedBudget', type: 'uint256' },
-    ],
-    outputs: [],
-    stateMutability: 'payable',
-  },
-  {
-    name: 'submit',
-    type: 'function',
-    inputs: [
-      { name: 'jobId', type: 'bytes32' },
-      { name: 'resultLocation', type: 'string' },
-    ],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-];
-
-// ── ABI encoding helpers ───────────────────────────────────────────────────
+// ── ABI encoding helpers ────────────────────────────────────────────────────
 function encodeUint256(n) {
-    const hex = BigInt(n).toString(16).padStart(64, '0');
-    return hex;
+    return BigInt(n).toString(16).padStart(64, '0');
 }
-function encodeBool(b) { return b ? '0'.repeat(63) + '1' : '0'.repeat(64); }
+function encodeBool(b)   { return b ? '0'.repeat(63) + '1' : '0'.repeat(64); }
 function encodeAddress(addr) { return addr.slice(2).toLowerCase().padStart(64, '0'); }
-function encodeBytes32(hex) { return hex.slice(2).padStart(64, '0'); }
+function encodeBytes32(hex)  { return hex.slice(2).padStart(64, '0'); }
 
 function encodeString(str) {
     const bytes = new TextEncoder().encode(str);
     const len   = bytes.length;
     let hex = encodeUint256(len);
     for (const b of bytes) hex += b.toString(16).padStart(2, '0');
-    // Pad to 32-byte boundary
     const rem = len % 32;
     if (rem !== 0) hex += '00'.repeat(32 - rem);
     return hex;
 }
 
 function encodeFunctionCall(selector, types, values) {
-    // Only handles: uint256, address, string, bytes32, bool
-    let staticPart   = '';
-    let dynamicPart  = '';
-    let dynOffset    = types.length * 32; // start of dynamic data
+    let staticPart  = '';
+    let dynamicPart = '';
+    const offsets   = [];
+    let dynOffset   = types.length * 32;
 
-    const offsets = [];
     for (let i = 0; i < types.length; i++) {
         if (types[i] === 'string' || types[i] === 'bytes') {
             offsets.push(dynOffset);
-            const enc = encodeString(values[i]);
+            const enc    = encodeString(values[i]);
             dynamicPart += enc;
             dynOffset   += enc.length / 2;
         } else {
@@ -392,14 +433,10 @@ function encodeFunctionCall(selector, types, values) {
         }
     }
 
-    // Re-build static part
-    let dynIdx = 0;
-    let runningOffset = types.length * 32;
-    const dynSizes = [];
+    let dynOff2 = types.length * 32;
     for (let i = 0; i < types.length; i++) {
         if (types[i] === 'string' || types[i] === 'bytes') {
             staticPart += encodeUint256(offsets[i]);
-            dynSizes.push(encodeString(values[i]).length / 2);
         } else if (types[i] === 'uint256') {
             staticPart += encodeUint256(values[i]);
         } else if (types[i] === 'address') {
@@ -414,91 +451,177 @@ function encodeFunctionCall(selector, types, values) {
     return '0x' + selector + staticPart + dynamicPart;
 }
 
-// keccak256 for function selectors via eth_call to a dummy contract is hard in vanilla JS.
-// We'll use the known 4-byte selectors computed offline.
 const SELECTORS = {
-    createPixelJob: '58cc6d2a', // keccak256("createPixelJob(uint256,uint256,uint256,uint256,uint256,string,string,address)")[0:4]
-    setProvider:    '4a7987a2', // keccak256("setProvider(bytes32,address)")[0:4]
-    setBudget:      'd1eb5f5e', // keccak256("setBudget(bytes32,uint256)")[0:4]
-    fund:           'e46bbc9e', // keccak256("fund(bytes32,uint256)")[0:4]
-    submit:         '91571387', // keccak256("submit(bytes32,string)")[0:4]
+    createPixelJob: '58cc6d2a',
+    setProvider:    '4a7987a2',
+    setBudget:      'd1eb5f5e',
+    fund:           'e46bbc9e',
+    submit:         '91571387',
 };
 
-// ── Wallet state ──────────────────────────────────────────────────────────
+function buildCalldata(fn, types, values) {
+    const sel = SELECTORS[fn];
+    if (!sel) throw new Error('Unknown function: ' + fn);
+    return encodeFunctionCall(sel, types, values);
+}
+
+// ── DOM refs ────────────────────────────────────────────────────────────────
+const container    = document.getElementById('canvas-container');
+const tooltip      = document.getElementById('tooltip');
+const statSold     = document.getElementById('stat-sold');
+const statAvail    = document.getElementById('stat-available');
+const statRev      = document.getElementById('stat-revenue');
+const hoverHL      = document.getElementById('hover-highlight');
+const selRect      = document.getElementById('selection-rect');
+const floatPanel   = document.getElementById('floating-panel');
+
+// ── Wallet state ────────────────────────────────────────────────────────────
 let walletAddress = null;
-const container  = document.getElementById('canvas-container');
-const tooltip    = document.getElementById('tooltip');
-const statSold   = document.getElementById('stat-sold');
-const statAvail  = document.getElementById('stat-available');
-const statRev    = document.getElementById('stat-revenue');
 
-// Set contract link
-document.getElementById('contract-link').href = EXPLORER_URL;
-document.getElementById('contract-link').innerText = CONTRACT_ADDRESS;
+// ── Selection state ─────────────────────────────────────────────────────────
+let selection  = null;   // { x, y, w, h } in canvas pixels, 10px-snapped
+let isDragging = false;
+let dragOrigin = null;   // { x, y } in canvas-local px
 
-// ── Load ETH balance (revenue stat) ──────────────────────────────────────
-async function loadRevenue() {
-    try {
-        const res = await fetch(BASE_SEPOLIA_RPC, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                jsonrpc: '2.0', id: 1, method: 'eth_getBalance',
-                params: [CONTRACT_ADDRESS, 'latest']
-            })
-        });
-        const data = await res.json();
-        if (data.result) {
-            const eth = Number(BigInt(data.result)) / 1e18;
-            statRev.innerText = eth.toFixed(6);
-        }
-    } catch {}
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function snapTo10(v) { return Math.floor(v / 10) * 10; }
+
+function canvasPos(e) {
+    const rect = container.getBoundingClientRect();
+    return {
+        x: Math.max(0, Math.min(990, e.clientX - rect.left)),
+        y: Math.max(0, Math.min(990, e.clientY - rect.top))
+    };
 }
 
-// ── Load pixels ───────────────────────────────────────────────────────────
-async function loadPixels() {
-    try {
-        const response = await fetch('pixels.json');
-        const pixels   = await response.json();
-        let totalPixelsSold = 0;
+function calcPrice(blocks) {
+    return Math.max(0.001, blocks * 0.00001);
+}
 
-        pixels.forEach(p => {
-            const block = document.createElement('a');
-            block.href   = p.linkUrl;
-            block.target = '_blank';
-            block.className = 'pixel-block';
-            block.style.left   = p.x + 'px';
-            block.style.top    = p.y + 'px';
-            block.style.width  = p.width + 'px';
-            block.style.height = p.height + 'px';
-            block.style.backgroundImage = `url(${p.imageUrl})`;
-            block.style.backgroundSize  = 'cover';
-            totalPixelsSold += (p.width * p.height);
+// ── Canvas mouse events ─────────────────────────────────────────────────────
+container.addEventListener('mousemove', (e) => {
+    const pos = canvasPos(e);
 
-            block.onmouseover = (e) => {
-                tooltip.style.display = 'block';
-                tooltip.innerHTML = `
-                    <strong>Owner:</strong> ${p.owner}<br>
-                    <strong>Job ID:</strong> ${p.jobId}<br>
-                    <strong>Size:</strong> ${p.width}x${p.height}px
-                `;
-            };
-            block.onmousemove = (e) => {
-                tooltip.style.left = (e.clientX + 15) + 'px';
-                tooltip.style.top  = (e.clientY + 15) + 'px';
-            };
-            block.onmouseout = () => { tooltip.style.display = 'none'; };
-            container.appendChild(block);
-        });
+    if (isDragging) {
+        hoverHL.style.display = 'none';
+        tooltip.style.display = 'none';
 
-        statSold.innerText  = totalPixelsSold.toLocaleString();
-        statAvail.innerText = (1000000 - totalPixelsSold).toLocaleString();
-    } catch (err) {
-        console.error("Failed to load pixels.json", err);
+        const ox = snapTo10(dragOrigin.x);
+        const oy = snapTo10(dragOrigin.y);
+        const ex = snapTo10(pos.x);
+        const ey = snapTo10(pos.y);
+
+        const rx = Math.min(ox, ex);
+        const ry = Math.min(oy, ey);
+        const rw = Math.abs(ex - ox) + 10;
+        const rh = Math.abs(ey - oy) + 10;
+
+        selRect.style.display = 'block';
+        selRect.style.left    = rx + 'px';
+        selRect.style.top     = ry + 'px';
+        selRect.style.width   = rw + 'px';
+        selRect.style.height  = rh + 'px';
+
+        selection = { x: rx, y: ry, w: rw, h: rh };
+    } else {
+        // hover highlight
+        hoverHL.style.display = 'block';
+        hoverHL.style.left    = snapTo10(pos.x) + 'px';
+        hoverHL.style.top     = snapTo10(pos.y) + 'px';
     }
+});
+
+container.addEventListener('mouseleave', () => {
+    hoverHL.style.display = 'none';
+    if (!isDragging) tooltip.style.display = 'none';
+});
+
+container.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    const pos = canvasPos(e);
+
+    // If clicking on a pixel-block (owned pixel), let the hover tooltip show
+    // and don't start a drag (the element event will handle it)
+    if (e.target.classList.contains('pixel-block')) return;
+
+    isDragging = true;
+    dragOrigin = pos;
+
+    // Clear previous selection UI
+    selRect.style.display = 'none';
+    floatPanel.classList.remove('visible');
+    floatPanel.style.display = 'none';
+    selection = null;
+
+    hoverHL.style.display = 'none';
+    e.preventDefault();
+});
+
+document.addEventListener('mouseup', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    if (selection && selection.w >= 10 && selection.h >= 10) {
+        showFloatingPanel();
+    } else {
+        clearSelection();
+    }
+});
+
+function clearSelection() {
+    selection = null;
+    selRect.style.display = 'none';
+    floatPanel.classList.remove('visible');
+    floatPanel.style.display = 'none';
+    clearStatus();
 }
 
-// ── Wallet connection ─────────────────────────────────────────────────────
+function showFloatingPanel() {
+    const { w, h } = selection;
+    const blocks   = (w / 10) * (h / 10);
+    const price    = calcPrice(blocks);
+
+    document.getElementById('panel-selection-label').textContent =
+        `${w}×${h}px — ${blocks.toLocaleString()} block${blocks !== 1 ? 's' : ''}`;
+    document.getElementById('panel-price').textContent = price.toFixed(5);
+    document.getElementById('panel-price-label').textContent = 'ETH';
+
+    positionPanel();
+    floatPanel.classList.remove('visible');
+    floatPanel.style.display = 'block';
+    // trigger reflow for animation
+    floatPanel.offsetHeight;
+    floatPanel.classList.add('visible');
+}
+
+function positionPanel() {
+    const canvasRect = container.getBoundingClientRect();
+    const panelW = 340;
+    const panelH = 320; // approximate
+
+    // Try right of selection first
+    let left = canvasRect.left + selection.x + selection.w + 14;
+    let top  = canvasRect.top  + selection.y;
+
+    // If overflows right → try left
+    if (left + panelW > window.innerWidth - 10) {
+        left = canvasRect.left + selection.x - panelW - 14;
+    }
+    // If still off-screen left → center horizontally
+    if (left < 10) {
+        left = Math.max(10, (window.innerWidth - panelW) / 2);
+    }
+    // Clamp vertically
+    if (top + panelH > window.innerHeight - 10) {
+        top = window.innerHeight - panelH - 10;
+    }
+    if (top < 10) top = 10;
+
+    floatPanel.style.left = left + 'px';
+    floatPanel.style.top  = top  + 'px';
+}
+
+// ── Wallet connection ───────────────────────────────────────────────────────
 async function connectWallet() {
     if (!window.ethereum) {
         setStatus('MetaMask not detected. Install it from metamask.io.', 'err');
@@ -529,38 +652,52 @@ async function connectWallet() {
             }
         }
 
-        document.getElementById('wallet-addr').innerText =
-            walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
-        document.getElementById('btn-connect').innerText = 'Connected ✓';
-        document.getElementById('btn-buy').disabled = false;
-        setStatus('Wallet connected. Fill in the form and click Buy Pixels.', 'info');
+        updateWalletUI();
+        setStatus('Wallet connected. Select pixels to buy.', 'info');
     } catch (err) {
         setStatus('Connection failed: ' + err.message, 'err');
     }
 }
 
-// ── Buy Pixels flow ───────────────────────────────────────────────────────
+function updateWalletUI() {
+    if (!walletAddress) return;
+    const short = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
+
+    // Header button
+    const headerBtn = document.getElementById('btn-connect-header');
+    headerBtn.textContent = short;
+    headerBtn.classList.add('connected');
+
+    // Panel
+    document.getElementById('panel-wallet-text').innerHTML =
+        `<span class="addr">${short}</span>`;
+    document.getElementById('fp-btn-buy').style.display     = 'block';
+    document.getElementById('fp-btn-connect').style.display = 'none';
+}
+
+// ── Buy Pixels ──────────────────────────────────────────────────────────────
 async function buyPixels() {
     if (!walletAddress) { setStatus('Connect your wallet first.', 'err'); return; }
+    if (!selection)     { setStatus('Select pixels on the canvas first.', 'err'); return; }
 
-    const x       = parseInt(document.getElementById('px-x').value);
-    const y       = parseInt(document.getElementById('px-y').value);
-    const w       = parseInt(document.getElementById('px-w').value);
-    const h       = parseInt(document.getElementById('px-h').value);
-    const imgUrl  = document.getElementById('px-img').value.trim();
-    const linkUrl = document.getElementById('px-link').value.trim();
-    const budgetEth = parseFloat(document.getElementById('px-budget').value);
+    const x        = selection.x;
+    const y        = selection.y;
+    const w        = selection.w;
+    const h        = selection.h;
+    const imgUrl   = document.getElementById('fp-img').value.trim();
+    const linkUrl  = document.getElementById('fp-link').value.trim();
 
-    if (!imgUrl || !linkUrl) { setStatus('Please fill in Image URL and Link URL.', 'err'); return; }
-    if (isNaN(x) || isNaN(y) || isNaN(w) || isNaN(h)) { setStatus('Invalid coordinates.', 'err'); return; }
+    if (!imgUrl)   { setStatus('Please enter an Image URL.', 'err'); return; }
+    if (!linkUrl)  { setStatus('Please enter a Link URL.', 'err'); return; }
 
-    const budgetWei = BigInt(Math.floor(budgetEth * 1e18));
-    const expiredAt = Math.floor(Date.now() / 1000) + 30 * 24 * 3600; // 30 days
+    const blocks     = (w / 10) * (h / 10);
+    const budgetEth  = calcPrice(blocks);
+    const budgetWei  = BigInt(Math.floor(budgetEth * 1e18));
+    const expiredAt  = Math.floor(Date.now() / 1000) + 30 * 24 * 3600; // 30 days
 
-    // Provider = deployer / relay address (can be any address; relay will use this)
     const RELAY_PROVIDER = '0x7b9797c4c2DA625b120A27AD2c07bECB7A0E30fa';
 
-    document.getElementById('btn-buy').disabled = true;
+    document.getElementById('fp-btn-buy').disabled = true;
     setStatus('Step 1/4: Creating pixel job…', 'info');
 
     try {
@@ -573,10 +710,10 @@ async function buyPixels() {
             method: 'eth_sendTransaction',
             params: [{ from: walletAddress, to: CONTRACT_ADDRESS, data: createData, gas: '0x7a120' }],
         });
-        setStatus(`Step 1/4: createPixelJob tx: ${createTx.slice(0,12)}… waiting…`, 'info');
+        setStatus(`Step 1/4: Waiting for confirmation…`, 'info');
         const jobId = await waitAndGetJobId(createTx);
         if (!jobId) throw new Error('Could not get jobId from receipt');
-        setStatus(`Step 2/4: setProvider…`, 'info');
+        setStatus('Step 2/4: Setting provider…', 'info');
 
         // 2. setProvider
         const spData = buildCalldata('setProvider', ['bytes32','address'], [jobId, RELAY_PROVIDER]);
@@ -585,7 +722,7 @@ async function buyPixels() {
             params: [{ from: walletAddress, to: CONTRACT_ADDRESS, data: spData, gas: '0x30d40' }],
         });
         await waitTx(spTx);
-        setStatus(`Step 3/4: setBudget…`, 'info');
+        setStatus('Step 3/4: Setting budget…', 'info');
 
         // 3. setBudget
         const sbData = buildCalldata('setBudget', ['bytes32','uint256'], [jobId, budgetWei.toString()]);
@@ -594,11 +731,11 @@ async function buyPixels() {
             params: [{ from: walletAddress, to: CONTRACT_ADDRESS, data: sbData, gas: '0x30d40' }],
         });
         await waitTx(sbTx);
-        setStatus(`Step 4/4: fund (sending ${budgetEth} ETH)…`, 'info');
+        setStatus(`Step 4/4: Funding with ${budgetEth.toFixed(5)} ETH…`, 'info');
 
         // 4. fund
-        const fData  = buildCalldata('fund', ['bytes32','uint256'], [jobId, budgetWei.toString()]);
-        const fTx    = await window.ethereum.request({
+        const fData = buildCalldata('fund', ['bytes32','uint256'], [jobId, budgetWei.toString()]);
+        const fTx   = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{
                 from: walletAddress, to: CONTRACT_ADDRESS, data: fData,
@@ -609,24 +746,31 @@ async function buyPixels() {
         await waitTx(fTx);
 
         setStatus(
-            `✅ Job created & funded! JobId: ${jobId.slice(0,10)}… The GenLayer AI will verify and place your pixel.`,
+            `✅ Done! Job ${jobId.slice(0,10)}… — GenLayer AI will verify and place your pixel.`,
             'ok'
         );
         loadRevenue();
     } catch (err) {
         setStatus('Error: ' + err.message, 'err');
     } finally {
-        document.getElementById('btn-buy').disabled = false;
+        document.getElementById('fp-btn-buy').disabled = false;
     }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────
+// ── Status helpers ──────────────────────────────────────────────────────────
 function setStatus(msg, cls) {
-    const el = document.getElementById('buy-status');
-    el.innerText = msg;
-    el.className = cls;
+    const el = document.getElementById('panel-status');
+    el.textContent = msg;
+    el.className   = cls;
 }
 
+function clearStatus() {
+    const el = document.getElementById('panel-status');
+    el.textContent = '';
+    el.className   = '';
+}
+
+// ── TX helpers ──────────────────────────────────────────────────────────────
 async function waitTx(hash) {
     for (let i = 0; i < 60; i++) {
         await new Promise(r => setTimeout(r, 2000));
@@ -641,26 +785,81 @@ async function waitTx(hash) {
 async function waitAndGetJobId(createTxHash) {
     const receipt = await waitTx(createTxHash);
     if (!receipt || !receipt.logs) return null;
-    // JobCreated event: keccak256("JobCreated(bytes32,address,address,uint256,string)")
-    // topic0 = 0x18f2a1dc...
-    const JOB_CREATED_SIG = '0x18f2a1dcb16e0d154157f83e14f5c418da21b56dc9a976c9d52fb06e37a9f5dd';
     for (const log of receipt.logs) {
         if (log.address.toLowerCase() === CONTRACT_ADDRESS.toLowerCase() && log.topics[1]) {
-            // topics[1] = jobId (bytes32 indexed)
             return log.topics[1];
         }
     }
     return null;
 }
 
-// Build calldata using known selectors — minimal ABI encoder
-function buildCalldata(fn, types, values) {
-    const sel = SELECTORS[fn];
-    if (!sel) throw new Error('Unknown function: ' + fn);
-    return encodeFunctionCall(sel, types, values);
+// ── Load revenue ────────────────────────────────────────────────────────────
+async function loadRevenue() {
+    try {
+        const res = await fetch(BASE_SEPOLIA_RPC, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jsonrpc: '2.0', id: 1, method: 'eth_getBalance',
+                params: [CONTRACT_ADDRESS, 'latest']
+            })
+        });
+        const data = await res.json();
+        if (data.result) {
+            const eth = Number(BigInt(data.result)) / 1e18;
+            statRev.innerText = eth.toFixed(6);
+        }
+    } catch {}
 }
 
-// ── Init ─────────────────────────────────────────────────────────────────
+// ── Load pixels ─────────────────────────────────────────────────────────────
+async function loadPixels() {
+    try {
+        const response = await fetch('pixels.json');
+        const pixels   = await response.json();
+        let totalPixelsSold = 0;
+
+        pixels.forEach(p => {
+            const block = document.createElement('a');
+            block.href      = p.linkUrl;
+            block.target    = '_blank';
+            block.className = 'pixel-block';
+            block.style.left   = p.x + 'px';
+            block.style.top    = p.y + 'px';
+            block.style.width  = p.width + 'px';
+            block.style.height = p.height + 'px';
+            block.style.backgroundImage = `url(${p.imageUrl})`;
+            block.style.backgroundSize  = 'cover';
+            totalPixelsSold += (p.width * p.height);
+
+            block.addEventListener('mouseover', (e) => {
+                e.stopPropagation();
+                hoverHL.style.display = 'none';
+                tooltip.style.display = 'block';
+                tooltip.innerHTML = `
+                    <strong>Owner:</strong> ${p.owner}<br>
+                    <strong>Job ID:</strong> ${p.jobId}<br>
+                    <strong>Size:</strong> ${p.width}×${p.height}px
+                `;
+            });
+            block.addEventListener('mousemove', (e) => {
+                tooltip.style.left = (e.clientX + 16) + 'px';
+                tooltip.style.top  = (e.clientY + 16) + 'px';
+            });
+            block.addEventListener('mouseout', () => {
+                tooltip.style.display = 'none';
+            });
+            container.appendChild(block);
+        });
+
+        statSold.innerText  = totalPixelsSold.toLocaleString();
+        statAvail.innerText = (1000000 - totalPixelsSold).toLocaleString();
+    } catch (err) {
+        console.error('Failed to load pixels.json', err);
+    }
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
 loadPixels();
 loadRevenue();
 </script>
