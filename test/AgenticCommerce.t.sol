@@ -11,7 +11,8 @@ contract AgenticCommerceTest is Test {
     address evaluator = address(0xEA10);
     
     function setUp() public {
-        ac = new AgenticCommerce();
+        // BRIDGE_RECEIVER = evaluator addr for tests; ORACLE_RELAYER = same
+        ac = new AgenticCommerce(evaluator, evaluator);
         vm.deal(client, 100 ether);
     }
     
@@ -183,7 +184,7 @@ contract AgenticCommerceTest is Test {
 
     function testCreatePixelJob() public {
         vm.prank(client);
-        bytes32 jobId = ac.createPixelJob(evaluator, block.timestamp + 1 days, 10, 20, 100, 100, "img", "link", address(0));
+        bytes32 jobId = ac.createPixelJob(block.timestamp + 1 days, 10, 20, 100, 100, "img", "link", address(0));
         
         (address _client,,,,,,string memory description,,) = ac.jobs(jobId);
         assertEq(_client, client);

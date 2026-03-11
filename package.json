@@ -1,0 +1,14 @@
+{
+  "name": "million-pixel-eap",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "deploy:base": "node scripts/deploy-base-sepolia.mjs",
+    "deploy:gl": "node scripts/deploy-genlayer.mjs",
+    "relay": "node scripts/pixel-relay.mjs"
+  },
+  "dependencies": {
+    "genlayer-js": "latest",
+    "viem": "^2.0.0"
+  }
+}
