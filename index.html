@@ -146,6 +146,19 @@
             display: none;
         }
 
+        /* Committed multi-select overlays (same style as active drag rect) */
+        .committed-selection {
+            position: absolute;
+            background: rgba(0, 255, 204, 0.1);
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 14px rgba(0, 255, 204, 0.35), inset 0 0 30px rgba(0, 255, 204, 0.04);
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        /* "+" cursor when Shift is held */
+        #canvas-container.shift-mode { cursor: cell; }
+
         /* ── Tooltip ────────────────────────────────────────────────────────── */
         #tooltip {
             position: fixed;
@@ -479,9 +492,10 @@ const floatPanel   = document.getElementById('floating-panel');
 let walletAddress = null;
 
 // ── Selection state ─────────────────────────────────────────────────────────
-let selection  = null;   // { x, y, w, h } in canvas pixels, 10px-snapped
+let selections = [];     // array of { x, y, w, h } committed rects (10px-snapped)
 let isDragging = false;
 let dragOrigin = null;   // { x, y } in canvas-local px
+let shiftDrag  = false;  // was Shift held at drag start?
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function snapTo10(v) { return Math.floor(v / 10) * 10; }
@@ -495,7 +509,7 @@ function canvasPos(e) {
 }
 
 function calcPrice(blocks) {
-    return Math.max(0.001, blocks * 0.00001);
+    return blocks * 0.001;   // 0.001 ETH per 10×10 block, linear, no floor
 }
 
 // ── Canvas mouse events ─────────────────────────────────────────────────────
@@ -521,8 +535,6 @@ container.addEventListener('mousemove', (e) => {
         selRect.style.top     = ry + 'px';
         selRect.style.width   = rw + 'px';
         selRect.style.height  = rh + 'px';
-
-        selection = { x: rx, y: ry, w: rw, h: rh };
     } else {
         // hover highlight
         hoverHL.style.display = 'block';
@@ -546,13 +558,17 @@ container.addEventListener('mousedown', (e) => {
 
     isDragging = true;
     dragOrigin = pos;
+    shiftDrag  = e.shiftKey;
 
-    // Clear previous selection UI
+    if (!shiftDrag) {
+        // Normal drag: clear existing selections
+        selections = [];
+        renderSelections();
+        floatPanel.classList.remove('visible');
+        floatPanel.style.display = 'none';
+    }
+
     selRect.style.display = 'none';
-    floatPanel.classList.remove('visible');
-    floatPanel.style.display = 'none';
-    selection = null;
-
     hoverHL.style.display = 'none';
     e.preventDefault();
 });
@@ -561,29 +577,68 @@ document.addEventListener('mouseup', (e) => {
     if (!isDragging) return;
     isDragging = false;
 
-    if (selection && selection.w >= 10 && selection.h >= 10) {
-        showFloatingPanel();
-    } else {
+    if (selRect.style.display !== 'none') {
+        const rx = parseInt(selRect.style.left)   || 0;
+        const ry = parseInt(selRect.style.top)    || 0;
+        const rw = parseInt(selRect.style.width)  || 0;
+        const rh = parseInt(selRect.style.height) || 0;
+
+        selRect.style.display = 'none';
+
+        if (rw >= 10 && rh >= 10) {
+            selections.push({ x: rx, y: ry, w: rw, h: rh });
+            renderSelections();
+            showFloatingPanel();
+        } else if (!shiftDrag) {
+            clearSelection();
+        }
+    } else if (!shiftDrag) {
         clearSelection();
     }
 });
 
 function clearSelection() {
-    selection = null;
+    selections = [];
+    renderSelections();
     selRect.style.display = 'none';
     floatPanel.classList.remove('visible');
     floatPanel.style.display = 'none';
     clearStatus();
 }
 
-function showFloatingPanel() {
-    const { w, h } = selection;
-    const blocks   = (w / 10) * (h / 10);
-    const price    = calcPrice(blocks);
+function renderSelections() {
+    // Remove stale committed-selection overlays
+    document.querySelectorAll('.committed-selection').forEach(el => el.remove());
+    for (const sel of selections) {
+        const div = document.createElement('div');
+        div.className    = 'committed-selection';
+        div.style.left   = sel.x + 'px';
+        div.style.top    = sel.y + 'px';
+        div.style.width  = sel.w + 'px';
+        div.style.height = sel.h + 'px';
+        container.appendChild(div);
+    }
+}
 
-    document.getElementById('panel-selection-label').textContent =
-        `${w}×${h}px — ${blocks.toLocaleString()} block${blocks !== 1 ? 's' : ''}`;
-    document.getElementById('panel-price').textContent = price.toFixed(5);
+function showFloatingPanel() {
+    if (selections.length === 0) return;
+
+    let totalBlocks = 0;
+    for (const sel of selections) {
+        totalBlocks += (sel.w / 10) * (sel.h / 10);
+    }
+    const totalPx = totalBlocks * 100; // each block = 10×10 = 100 pixels (display as raw pixels)
+    const price   = calcPrice(totalBlocks);
+
+    let label;
+    if (selections.length === 1) {
+        const { w, h } = selections[0];
+        label = `${w}×${h} px — ${totalBlocks.toLocaleString()} block${totalBlocks !== 1 ? 's' : ''} — ${price.toFixed(4)} ETH`;
+    } else {
+        label = `${selections.length} selections — ${totalBlocks.toLocaleString()} blocks — ${price.toFixed(4)} ETH`;
+    }
+    document.getElementById('panel-selection-label').textContent = label;
+    document.getElementById('panel-price').textContent = price.toFixed(4);
     document.getElementById('panel-price-label').textContent = 'ETH';
 
     positionPanel();
@@ -595,17 +650,18 @@ function showFloatingPanel() {
 }
 
 function positionPanel() {
+    const ref      = selections[selections.length - 1]; // anchor to last drawn rect
     const canvasRect = container.getBoundingClientRect();
     const panelW = 340;
     const panelH = 320; // approximate
 
     // Try right of selection first
-    let left = canvasRect.left + selection.x + selection.w + 14;
-    let top  = canvasRect.top  + selection.y;
+    let left = canvasRect.left + ref.x + ref.w + 14;
+    let top  = canvasRect.top  + ref.y;
 
     // If overflows right → try left
     if (left + panelW > window.innerWidth - 10) {
-        left = canvasRect.left + selection.x - panelW - 14;
+        left = canvasRect.left + ref.x - panelW - 14;
     }
     // If still off-screen left → center horizontally
     if (left < 10) {
