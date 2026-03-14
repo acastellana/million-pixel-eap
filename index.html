@@ -21,6 +21,13 @@
             overflow: hidden;
         }
 
+        @media (max-width: 600px) {
+            html, body {
+                overflow-y: auto;
+                height: auto;
+            }
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -374,13 +381,17 @@
                 gap: 0.4rem;
             }
 
-            #floating-panel {
-                width: calc(100vw - 1.5rem);
+            /* Panel anchors to bottom on mobile — JS positioning disabled via isMobileView() */
+            #floating-panel.mobile-anchored {
+                position: fixed !important;
+                width: calc(100vw - 1.5rem) !important;
                 left: 0.75rem !important;
                 right: 0.75rem !important;
-                bottom: 3rem !important;
+                bottom: 4rem !important;
                 top: auto !important;
                 border-radius: 16px;
+                max-height: 70vh;
+                overflow-y: auto;
             }
         }
 
@@ -768,21 +779,39 @@ function showFloatingPanel() {
     floatPanel.classList.add('visible');
 }
 
+function isMobileView() { return window.innerWidth <= 600; }
+
 function positionPanel() {
-    const ref      = selections[selections.length - 1]; // anchor to last drawn rect
+    if (isMobileView()) {
+        // On mobile: bottom-anchored sheet, no JS positioning
+        floatPanel.classList.add('mobile-anchored');
+        floatPanel.style.left   = '';
+        floatPanel.style.top    = '';
+        floatPanel.style.bottom = '';
+        return;
+    }
+    floatPanel.classList.remove('mobile-anchored');
+
+    const ref        = selections[selections.length - 1];
     const canvasRect = container.getBoundingClientRect();
-    const panelW = 340;
-    const panelH = 320; // approximate
+    const scale      = canvasRect.width / 1000;
+    const panelW     = 340;
+    const panelH     = 320;
+
+    // Selection rect in viewport coords
+    const selLeft = canvasRect.left + ref.x * scale;
+    const selTop  = canvasRect.top  + ref.y * scale;
+    const selRight = selLeft + ref.w * scale;
 
     // Try right of selection first
-    let left = canvasRect.left + ref.x + ref.w + 14;
-    let top  = canvasRect.top  + ref.y;
+    let left = selRight + 14;
+    let top  = selTop;
 
-    // If overflows right → try left
+    // Overflow right → try left
     if (left + panelW > window.innerWidth - 10) {
-        left = canvasRect.left + ref.x - panelW - 14;
+        left = selLeft - panelW - 14;
     }
-    // If still off-screen left → center horizontally
+    // Still off-screen → center
     if (left < 10) {
         left = Math.max(10, (window.innerWidth - panelW) / 2);
     }
@@ -1076,8 +1105,25 @@ loadRevenue();
 
 // ── Scale canvas to fill viewport ───────────────────────────────────────────
 function scaleCanvas() {
-    const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 1000);
+    // On mobile: fill the full viewport width so the grid is usable.
+    // On desktop: fit the entire grid without scrolling.
+    let scale;
+    if (window.innerWidth <= 600) {
+        // Portrait mobile: fill width, allow vertical scroll inside wrapper
+        scale = window.innerWidth / 1000;
+    } else {
+        scale = Math.min(window.innerWidth / 1000, window.innerHeight / 1000);
+    }
     container.style.transform = `scale(${scale})`;
+
+    // Update canvas-wrapper height on mobile so the scaled canvas doesn't clip
+    if (window.innerWidth <= 600) {
+        document.getElementById('canvas-wrapper').style.height = (1000 * scale) + 'px';
+        document.getElementById('canvas-wrapper').style.overflow = 'visible';
+    } else {
+        document.getElementById('canvas-wrapper').style.height = '100vh';
+        document.getElementById('canvas-wrapper').style.overflow = 'hidden';
+    }
 }
 scaleCanvas();
 window.addEventListener('resize', scaleCanvas);
