@@ -797,9 +797,45 @@ function positionPanel() {
 }
 
 // ── Wallet connection ───────────────────────────────────────────────────────
+function isMobile() {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+function openInMetaMask() {
+    const url = window.location.href.replace(/^https?:\/\//, '');
+    window.location.href = 'https://metamask.app.link/dapp/' + url;
+}
+
 async function connectWallet() {
     if (!window.ethereum) {
-        setStatus('MetaMask not detected. Install it from metamask.io.', 'err');
+        if (isMobile()) {
+            // On mobile without injected provider — offer to open inside MetaMask app
+            const panel = document.getElementById('panel-status');
+            setStatus('', 'info');
+            // Show a styled button in the panel status area
+            panel.innerHTML = `
+                <div style="margin-top:0.5rem">
+                    <div style="color:#aaa;margin-bottom:0.6rem;font-size:0.78rem;">
+                        No wallet detected. Open this page inside MetaMask's browser:
+                    </div>
+                    <button onclick="openInMetaMask()" style="
+                        width:100%;padding:0.6rem;background:var(--accent-color);
+                        border:none;border-radius:9px;color:#0a0a0c;font-size:0.88rem;
+                        font-weight:700;cursor:pointer;letter-spacing:0.2px;">
+                        🦊 Open in MetaMask
+                    </button>
+                    <div style="color:#555;margin-top:0.5rem;font-size:0.7rem;text-align:center;">
+                        or use a desktop browser with MetaMask installed
+                    </div>
+                </div>`;
+            panel.style.color = '#aaa';
+        } else {
+            setStatus('MetaMask not detected — <a href="https://metamask.io/download/" target="_blank" style="color:var(--accent-color)">install it here</a>.', 'err');
+            document.getElementById('panel-status').innerHTML = `
+                No MetaMask detected. 
+                <a href="https://metamask.io/download/" target="_blank" style="color:var(--accent-color);text-decoration:underline">
+                Install MetaMask →</a>`;
+        }
         return;
     }
     try {
