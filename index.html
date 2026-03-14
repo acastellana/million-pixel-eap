@@ -23,8 +23,13 @@
 
         @media (max-width: 600px) {
             html, body {
+                overflow: hidden;
+                height: 100%;
+            }
+            /* On mobile the canvas wrapper scrolls, not the body */
+            #canvas-wrapper {
                 overflow-y: auto;
-                height: auto;
+                overflow-x: hidden;
             }
         }
 
@@ -129,14 +134,13 @@
             height: 100vh;
             overflow: hidden;
             z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             background: #000;
         }
 
         #canvas-container {
-            position: relative;
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 1000px;
             height: 1000px;
             background-color: #000;
@@ -148,7 +152,7 @@
             background-size: 10px 10px;
             user-select: none;
             -webkit-user-select: none;
-            transform-origin: center center;
+            transform-origin: top left;
         }
 
         .pixel-block {
@@ -1104,26 +1108,16 @@ loadPixels();
 loadRevenue();
 
 // ── Scale canvas to fill viewport ───────────────────────────────────────────
+// canvas-container is transform-origin: top left, positioned absolute top:0 left:0.
+// We simply scale it to fill viewport width (mobile) or fit both dimensions (desktop).
 function scaleCanvas() {
-    // On mobile: fill the full viewport width so the grid is usable.
-    // On desktop: fit the entire grid without scrolling.
-    let scale;
-    if (window.innerWidth <= 600) {
-        // Portrait mobile: fill width, allow vertical scroll inside wrapper
-        scale = window.innerWidth / 1000;
-    } else {
-        scale = Math.min(window.innerWidth / 1000, window.innerHeight / 1000);
-    }
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const mobile = vw <= 600;
+    // Mobile: fill full width, grid is taller than viewport so user scrolls inside wrapper
+    // Desktop: fit both axes (no scroll)
+    const scale = mobile ? vw / 1000 : Math.min(vw / 1000, vh / 1000);
     container.style.transform = `scale(${scale})`;
-
-    // Update canvas-wrapper height on mobile so the scaled canvas doesn't clip
-    if (window.innerWidth <= 600) {
-        document.getElementById('canvas-wrapper').style.height = (1000 * scale) + 'px';
-        document.getElementById('canvas-wrapper').style.overflow = 'visible';
-    } else {
-        document.getElementById('canvas-wrapper').style.height = '100vh';
-        document.getElementById('canvas-wrapper').style.overflow = 'hidden';
-    }
 }
 scaleCanvas();
 window.addEventListener('resize', scaleCanvas);
