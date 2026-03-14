@@ -360,6 +360,30 @@
         #panel-status.err  { color: #ff6464 !important; }
         #panel-status.info { color: #999 !important; }
 
+        /* ── Mobile responsive ──────────────────────────────────────────────── */
+        @media (max-width: 600px) {
+            header { padding: 0.5rem 0.75rem; }
+            h1 { font-size: 0.85rem; }
+            #btn-connect-header { font-size: 0.68rem; padding: 0.3rem 0.65rem; }
+
+            #stats-overlay {
+                bottom: 0.5rem;
+                right: 0.5rem;
+                font-size: 0.62rem;
+                padding: 0.3rem 0.55rem;
+                gap: 0.4rem;
+            }
+
+            #floating-panel {
+                width: calc(100vw - 1.5rem);
+                left: 0.75rem !important;
+                right: 0.75rem !important;
+                bottom: 3rem !important;
+                top: auto !important;
+                border-radius: 16px;
+            }
+        }
+
         /* ── Footer ─────────────────────────────────────────────────────────── */
         footer {
             display: none;
@@ -532,9 +556,10 @@ function snapTo10(v) { return Math.floor(v / 10) * 10; }
 
 function canvasPos(e) {
     const rect = container.getBoundingClientRect();
+    const scale = rect.width / 1000;
     return {
-        x: Math.max(0, Math.min(990, e.clientX - rect.left)),
-        y: Math.max(0, Math.min(990, e.clientY - rect.top))
+        x: Math.max(0, Math.min(990, (e.clientX - rect.left) / scale)),
+        y: Math.max(0, Math.min(990, (e.clientY - rect.top)  / scale))
     };
 }
 
@@ -635,6 +660,70 @@ function clearSelection() {
     floatPanel.style.display = 'none';
     clearStatus();
 }
+
+// ── Touch events (mobile drag-select) ───────────────────────────────────────
+function touchPos(e) {
+    const t = e.touches[0] || e.changedTouches[0];
+    const rect = container.getBoundingClientRect();
+    const scale = rect.width / 1000;
+    return {
+        x: Math.max(0, Math.min(990, (t.clientX - rect.left) / scale)),
+        y: Math.max(0, Math.min(990, (t.clientY - rect.top)  / scale))
+    };
+}
+
+container.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const pos = touchPos(e);
+    if (e.target.classList.contains('pixel-block')) return;
+    isDragging = true;
+    dragOrigin = pos;
+    shiftDrag  = false;
+    selections = [];
+    renderSelections();
+    floatPanel.classList.remove('visible');
+    floatPanel.style.display = 'none';
+    selRect.style.display = 'none';
+    hoverHL.style.display  = 'none';
+}, { passive: false });
+
+container.addEventListener('touchmove', (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    const pos = touchPos(e);
+    const ox = snapTo10(dragOrigin.x);
+    const oy = snapTo10(dragOrigin.y);
+    const cx = snapTo10(pos.x);
+    const cy = snapTo10(pos.y);
+    const x = Math.min(ox, cx);
+    const y = Math.min(oy, cy);
+    const w = Math.max(10, Math.abs(cx - ox));
+    const h = Math.max(10, Math.abs(cy - oy));
+    selRect.style.left    = x + 'px';
+    selRect.style.top     = y + 'px';
+    selRect.style.width   = w + 'px';
+    selRect.style.height  = h + 'px';
+    selRect.style.display = 'block';
+}, { passive: false });
+
+container.addEventListener('touchend', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    e.preventDefault();
+    if (selRect.style.display !== 'none') {
+        const rx = parseInt(selRect.style.left)   || 0;
+        const ry = parseInt(selRect.style.top)    || 0;
+        const rw = parseInt(selRect.style.width)  || 0;
+        const rh = parseInt(selRect.style.height) || 0;
+        selRect.style.display = 'none';
+        if (rw >= 10 && rh >= 10) {
+            selections.push({ x: rx, y: ry, w: rw, h: rh });
+            renderSelections();
+            showFloatingPanel();
+        }
+    }
+}, { passive: false });
 
 function renderSelections() {
     // Remove stale committed-selection overlays
