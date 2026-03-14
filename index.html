@@ -15,80 +15,74 @@
 
         * { box-sizing: border-box; }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Inter', -apple-system, sans-serif;
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
         }
 
-        /* ── Header ────────────────────────────────────────────────────────── */
+        /* ── Header — floating overlay top-left ────────────────────────────── */
         header {
-            text-align: center;
-            padding: 1.5rem 2rem;
-            width: 100%;
-            background: linear-gradient(to bottom, #111, transparent);
-            position: relative;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            background: rgba(10, 10, 12, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 200;
+            pointer-events: none; /* let clicks pass through to canvas */
+        }
+
+        /* re-enable pointer events only on interactive children */
+        header > *, header button { pointer-events: auto; }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         h1 {
             margin: 0;
-            font-size: 2.5rem;
-            letter-spacing: -1px;
+            font-size: 1rem;
+            letter-spacing: -0.3px;
             background: linear-gradient(45deg, #fff, var(--accent-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            white-space: nowrap;
         }
 
-        .subtitle {
-            margin-top: 0.5rem;
-            opacity: 0.7;
-            font-weight: 300;
-        }
+        .subtitle { display: none; }
 
-        .stats {
-            display: flex;
-            gap: 2rem;
-            margin: 1rem 0 0;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            justify-content: center;
-        }
+        /* Stats moved to bottom-right pill */
+        .stats { display: none; }
 
-        .stats span b { color: var(--accent-color); }
+        .mission { display: none; }
 
-        .mission {
-            max-width: 700px;
-            margin: 1rem auto 0;
-            padding: 0.8rem 1.2rem;
-            border: 1px solid rgba(0,255,204,0.25);
-            border-radius: 6px;
-            background: rgba(0,255,204,0.05);
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: #ccc;
-        }
-
-        /* Wallet connect button — top-right of header */
+        /* Wallet connect button */
         #btn-connect-header {
-            position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            padding: 0.45rem 1rem;
+            padding: 0.35rem 0.8rem;
             background: rgba(0, 255, 204, 0.08);
-            border: 1px solid rgba(0, 255, 204, 0.5);
-            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            border-radius: 6px;
             color: var(--accent-color);
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-            letter-spacing: 0.4px;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
             white-space: nowrap;
         }
         #btn-connect-header:hover { background: rgba(0, 255, 204, 0.18); }
@@ -97,23 +91,57 @@
             border-color: rgba(0, 255, 204, 0.3);
         }
 
-        /* ── Canvas ─────────────────────────────────────────────────────────── */
+        /* ── Stats pill — bottom right overlay ─────────────────────────────── */
+        #stats-overlay {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 200;
+            display: flex;
+            gap: 0.6rem;
+            background: rgba(10, 10, 12, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #666;
+            pointer-events: none;
+        }
+        #stats-overlay span b { color: var(--accent-color); }
+
+        /* ── Canvas — fills entire viewport via scale ──────────────────────── */
+        #canvas-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
         #canvas-container {
             position: relative;
             width: 1000px;
             height: 1000px;
             background-color: #000;
-            border: 1px solid #2a2a2e;
-            box-shadow: 0 0 60px rgba(0,0,0,0.6);
             cursor: crosshair;
             overflow: hidden;
             background-image:
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 10px 10px;
-            margin-bottom: 2rem;
             user-select: none;
             -webkit-user-select: none;
+            transform-origin: center center;
         }
 
         .pixel-block {
@@ -334,6 +362,7 @@
 
         /* ── Footer ─────────────────────────────────────────────────────────── */
         footer {
+            display: none;
             margin-top: auto;
             padding: 2rem;
             opacity: 0.45;
@@ -345,25 +374,26 @@
 <body>
 
 <header>
-    <h1>The Million Pixel Page</h1>
-    <div class="subtitle">Powered by EIP-8183 Agentic Commerce &amp; GenLayer Intelligent Contracts</div>
-    <div class="stats">
-        <span>Sold: <b id="stat-sold">0</b></span>
-        <span>Available: <b id="stat-available">1,000,000</b></span>
-        <span>Revenue: <b id="stat-revenue">0</b> ETH</span>
-    </div>
-    <div class="mission">
-        💡 <strong style="color:var(--accent-color);">100% of proceeds fund EIP-8183 development.</strong>
-        Every pixel purchased through the Agentic Commerce escrow directly supports the creation,
-        tooling, and adoption of <a href="https://github.com/ethereum/ERCs/blob/master/ERCS/erc-8183.md" target="_blank" style="color:var(--accent-color);text-decoration:underline;">EIP-8183 (Agentic Commerce Protocol)</a> —
-        the open standard for AI agent job escrows on Ethereum.
+    <div class="header-left">
+        <h1>Million Pixel Page</h1>
     </div>
     <button id="btn-connect-header" onclick="connectWallet()">Connect Wallet</button>
 </header>
 
-<div id="canvas-container">
-    <div id="hover-highlight"></div>
-    <div id="selection-rect"></div>
+<div id="canvas-wrapper">
+  <div id="canvas-container">
+      <div id="hover-highlight"></div>
+      <div id="selection-rect"></div>
+  </div>
+</div>
+
+<!-- Stats pill — bottom-right overlay -->
+<div id="stats-overlay">
+    <span>Sold: <b id="stat-sold">0</b></span>
+    <span>·</span>
+    <span>Available: <b id="stat-available">1M</b></span>
+    <span>·</span>
+    <span>Revenue: <b id="stat-revenue">0</b> ETH</span>
 </div>
 
 <div id="tooltip"></div>
@@ -918,6 +948,14 @@ async function loadPixels() {
 // ── Init ─────────────────────────────────────────────────────────────────────
 loadPixels();
 loadRevenue();
+
+// ── Scale canvas to fill viewport ───────────────────────────────────────────
+function scaleCanvas() {
+    const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 1000);
+    container.style.transform = `scale(${scale})`;
+}
+scaleCanvas();
+window.addEventListener('resize', scaleCanvas);
 </script>
 
 </body>
