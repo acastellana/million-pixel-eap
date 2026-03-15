@@ -6,11 +6,11 @@
     <title>The Million Pixel Page — Powered by EIP-8183 & GenLayer</title>
     <style>
         :root {
-            --bg-color: #f5f5f7;
-            --grid-color: #d0d0d5;
-            --text-color: #1a1a1e;
-            --accent-color: #007aff;
-            --hover-color: rgba(0, 122, 255, 0.15);
+            --bg-color: #0a0a0c;
+            --grid-color: #1a1a1e;
+            --text-color: #e0e0e0;
+            --accent-color: #00ffcc;
+            --hover-color: rgba(0, 255, 204, 0.2);
         }
 
         * { box-sizing: border-box; }
@@ -38,7 +38,6 @@
             color: var(--text-color);
             font-family: 'Inter', -apple-system, sans-serif;
             margin: 0;
-            color-scheme: light;
         }
 
         /* ── Header — floating overlay top-left ────────────────────────────── */
@@ -51,10 +50,9 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.6rem 1rem;
-            background: rgba(245, 245, 247, 0.82);
+            background: rgba(10, 10, 12, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(0,0,0,0.08);
             z-index: 200;
             pointer-events: none; /* let clicks pass through to canvas */
         }
@@ -72,7 +70,7 @@
             margin: 0;
             font-size: 1rem;
             letter-spacing: -0.3px;
-            background: linear-gradient(45deg, #1a1a1e, var(--accent-color));
+            background: linear-gradient(45deg, #fff, var(--accent-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             white-space: nowrap;
@@ -88,8 +86,8 @@
         /* Wallet connect button */
         #btn-connect-header {
             padding: 0.35rem 0.8rem;
-            background: rgba(0, 122, 255, 0.08);
-            border: 1px solid rgba(0, 122, 255, 0.35);
+            background: rgba(0, 255, 204, 0.08);
+            border: 1px solid rgba(0, 255, 204, 0.4);
             border-radius: 6px;
             color: var(--accent-color);
             font-size: 0.72rem;
@@ -99,10 +97,10 @@
             letter-spacing: 0.3px;
             white-space: nowrap;
         }
-        #btn-connect-header:hover { background: rgba(0, 122, 255, 0.16); }
+        #btn-connect-header:hover { background: rgba(0, 255, 204, 0.18); }
         #btn-connect-header.connected {
-            background: rgba(0, 122, 255, 0.05);
-            border-color: rgba(0, 122, 255, 0.25);
+            background: rgba(0, 255, 204, 0.05);
+            border-color: rgba(0, 255, 204, 0.3);
         }
 
         /* ── Stats pill — bottom right overlay ─────────────────────────────── */
@@ -113,16 +111,16 @@
             z-index: 200;
             display: flex;
             gap: 0.6rem;
-            background: rgba(245, 245, 247, 0.82);
+            background: rgba(10, 10, 12, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.06);
             border-radius: 8px;
             padding: 0.4rem 0.75rem;
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #888;
+            color: #666;
             pointer-events: none;
         }
         #stats-overlay span b { color: var(--accent-color); }
@@ -136,7 +134,7 @@
             height: 100vh;
             overflow: hidden;
             z-index: 1;
-            background: var(--bg-color);
+            background: #000;
         }
 
         #canvas-container {
@@ -145,7 +143,7 @@
             left: 0;
             width: 1000px;
             height: 1000px;
-            background-color: #ffffff;
+            background-color: #000;
             cursor: crosshair;
             overflow: hidden;
             background-image:
@@ -169,7 +167,7 @@
             width: 10px;
             height: 10px;
             background: var(--hover-color);
-            box-shadow: 0 0 6px rgba(0, 122, 255, 0.4);
+            box-shadow: 0 0 8px var(--accent-color);
             pointer-events: none;
             z-index: 5;
             display: none;
@@ -179,9 +177,9 @@
         /* Rubber-band selection rectangle */
         #selection-rect {
             position: absolute;
-            background: rgba(0, 122, 255, 0.08);
+            background: rgba(0, 255, 204, 0.1);
             border: 2px solid var(--accent-color);
-            box-shadow: 0 0 14px rgba(0, 122, 255, 0.25), inset 0 0 30px rgba(0, 122, 255, 0.04);
+            box-shadow: 0 0 14px rgba(0, 255, 204, 0.35), inset 0 0 30px rgba(0, 255, 204, 0.04);
             pointer-events: none;
             z-index: 6;
             display: none;
@@ -190,9 +188,9 @@
         /* Committed multi-select overlays (same style as active drag rect) */
         .committed-selection {
             position: absolute;
-            background: rgba(0, 122, 255, 0.08);
+            background: rgba(0, 255, 204, 0.1);
             border: 2px solid var(--accent-color);
-            box-shadow: 0 0 14px rgba(0, 122, 255, 0.25), inset 0 0 30px rgba(0, 122, 255, 0.04);
+            box-shadow: 0 0 14px rgba(0, 255, 204, 0.35), inset 0 0 30px rgba(0, 255, 204, 0.04);
             pointer-events: none;
             z-index: 6;
         }
@@ -203,16 +201,15 @@
         /* ── Tooltip ────────────────────────────────────────────────────────── */
         #tooltip {
             position: fixed;
-            background: rgba(255, 255, 255, 0.96);
-            border: 1px solid rgba(0, 122, 255, 0.3);
-            color: #1a1a1e;
+            background: rgba(0, 0, 0, 0.92);
+            border: 1px solid var(--accent-color);
             padding: 10px 12px;
             pointer-events: none;
             display: none;
             z-index: 300;
             font-size: 0.8rem;
             border-radius: 6px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             line-height: 1.6;
         }
 
@@ -221,13 +218,13 @@
             position: fixed;
             z-index: 150;
             width: 340px;
-            background: rgba(255, 255, 255, 0.96);
+            background: rgba(10, 10, 14, 0.94);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 255, 204, 0.3);
             border-radius: 14px;
             padding: 1.2rem 1.4rem 1.1rem;
-            box-shadow: 0 12px 48px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,255,204,0.08);
             display: none;
         }
 
@@ -257,14 +254,14 @@
 
         .panel-subtitle {
             font-size: 0.72rem;
-            color: #888;
+            color: #666;
             margin-top: 0.2rem;
         }
 
         .panel-close {
             background: none;
             border: none;
-            color: #aaa;
+            color: #555;
             font-size: 1rem;
             cursor: pointer;
             padding: 0;
@@ -272,7 +269,7 @@
             margin-top: 2px;
             transition: color 0.15s;
         }
-        .panel-close:hover { color: #555; }
+        .panel-close:hover { color: #bbb; }
 
         .panel-price-row {
             display: flex;
@@ -280,7 +277,7 @@
             gap: 0.5rem;
             margin-bottom: 0.9rem;
             padding-bottom: 0.85rem;
-            border-bottom: 1px solid rgba(0,0,0,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
         }
 
         .panel-price {
@@ -291,7 +288,7 @@
 
         .panel-price-label {
             font-size: 0.75rem;
-            color: #999;
+            color: #555;
         }
 
         .panel-inputs {
@@ -303,30 +300,30 @@
 
         #floating-panel input[type="url"],
         #floating-panel input[type="text"] {
-            background: rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            color: #1a1a1e;
+            color: #ddd;
             padding: 0.5rem 0.75rem;
             font-size: 0.83rem;
             width: 100%;
             transition: border-color 0.15s, background 0.15s;
         }
-        #floating-panel input::placeholder { color: #bbb; }
+        #floating-panel input::placeholder { color: #444; }
         #floating-panel input:focus {
             outline: none;
-            border-color: rgba(0, 122, 255, 0.5);
-            background: rgba(0, 122, 255, 0.03);
+            border-color: rgba(0, 255, 204, 0.45);
+            background: rgba(0, 255, 204, 0.03);
         }
 
         .panel-wallet {
             font-size: 0.73rem;
-            color: #999;
+            color: #666;
             margin-bottom: 0.7rem;
         }
         .panel-wallet .addr {
             color: var(--accent-color);
-            opacity: 0.9;
+            opacity: 0.85;
         }
 
         .btn-buy-panel {
@@ -335,7 +332,7 @@
             background: var(--accent-color);
             border: none;
             border-radius: 9px;
-            color: #ffffff;
+            color: #0a0a0c;
             font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
@@ -349,8 +346,8 @@
         .btn-connect-panel {
             width: 100%;
             padding: 0.65rem;
-            background: rgba(0, 122, 255, 0.07);
-            border: 1px solid rgba(0, 122, 255, 0.35);
+            background: rgba(0, 255, 204, 0.07);
+            border: 1px solid rgba(0, 255, 204, 0.4);
             border-radius: 9px;
             color: var(--accent-color);
             font-size: 0.9rem;
@@ -358,7 +355,7 @@
             cursor: pointer;
             transition: background 0.15s;
         }
-        .btn-connect-panel:hover { background: rgba(0, 122, 255, 0.14); }
+        .btn-connect-panel:hover { background: rgba(0, 255, 204, 0.14); }
 
         #panel-status {
             font-size: 0.76rem;
@@ -369,10 +366,10 @@
             transition: color 0.2s;
             word-break: break-word;
         }
-        #panel-status:not(:empty) { color: #777; }
-        #panel-status.ok   { color: #34c759 !important; }
-        #panel-status.err  { color: #ff3b30 !important; }
-        #panel-status.info { color: #888 !important; }
+        #panel-status:not(:empty) { color: #888; }
+        #panel-status.ok   { color: var(--accent-color) !important; }
+        #panel-status.err  { color: #ff6464 !important; }
+        #panel-status.info { color: #999 !important; }
 
         /* ── Mobile responsive ──────────────────────────────────────────────── */
         @media (max-width: 600px) {
