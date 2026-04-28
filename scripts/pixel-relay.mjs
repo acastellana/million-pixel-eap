@@ -29,6 +29,29 @@ import { execSync } from "child_process";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
+// ── Telegram notifications ────────────────────────────────────────────────────
+const TG_BOT_TOKEN = "8452816021:AAHIEUEPhfVUW06oElbAemY7A2gES9J00A4";
+const TG_CHAT_ID   = "-1003814943696";
+const TG_TOPIC_ID  = "9458";
+
+async function tgNotify(text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: TG_CHAT_ID,
+        message_thread_id: Number(TG_TOPIC_ID),
+        text,
+        parse_mode: "HTML",
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+  } catch (err) {
+    console.warn("[TG] Notification failed:", err.message);
+  }
+}
+
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT  = join(__dir, "..");
 const RPC   = "https://sepolia.base.org";
@@ -427,6 +450,24 @@ async function processJob(jobId, state) {
   console.log(`   GL tx:   ${glTxHash}`);
   console.log(`   Base tx: ${deliveryTx}`);
   console.log(`${"─".repeat(60)}\n`);
+
+  // Notify Telegram
+  if (approved) {
+    await tgNotify(
+      `🖼️ <b>Pixel placed!</b>\n` +
+      `📍 Position: (${pixel.x}, ${pixel.y}) — ${pixel.width}×${pixel.height}px\n` +
+      `🔗 <a href="${pixel.linkUrl}">${pixel.linkUrl.slice(0, 60)}</a>\n` +
+      `👤 Owner: <code>${client.slice(0,10)}…</code>\n` +
+      `🔎 <a href="https://sepolia.basescan.org/tx/${deliveryTx}">Base tx</a>`
+    );
+  } else {
+    await tgNotify(
+      `❌ <b>Pixel rejected</b>\n` +
+      `📍 Position: (${pixel.x}, ${pixel.y}) — ${pixel.width}×${pixel.height}px\n` +
+      `👤 Client: <code>${client.slice(0,10)}…</code>\n` +
+      `📝 Reason: ${(reason || "unknown").slice(0, 200)}`
+    );
+  }
 
   return result;
 }
